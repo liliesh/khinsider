@@ -51,6 +51,12 @@ func Execute(buildInfo BuildInfo) {
 				Usage:   "Disable checks for updates to khinsider (env: KHINSIDER_NO_UPDATE)",
 				EnvVars: []string{"CI", "KHINSIDER_NO_UPDATE"},
 			},
+			&cli.BoolFlag{
+				Name:    "flac-mode",
+				Aliases: []string{"f"},
+				Value:   false,
+				Usage:   "Downloads provided/selected album as flac. (if available)",
+			},
 		},
 		Before: func(c *cli.Context) error {
 			if c.Bool("debug") {
@@ -73,7 +79,7 @@ func Execute(buildInfo BuildInfo) {
 					return BeforeSearch()
 				},
 				Action: func(c *cli.Context) error {
-					return SearchAction()
+					return SearchAction(c.Bool("flac-mode"))
 				},
 			},
 			{
@@ -81,7 +87,7 @@ func Execute(buildInfo BuildInfo) {
 				Aliases: []string{"a"},
 				Usage:   "download an album given a slug",
 				Action: func(c *cli.Context) error {
-					return DownloadAction([]string{c.Args().First()})
+					return DownloadAction([]string{c.Args().First()}, c.Bool("flac-mode"))
 				},
 			},
 			{

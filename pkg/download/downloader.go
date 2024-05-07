@@ -13,9 +13,9 @@ import (
 	"github.com/pterm/pterm"
 )
 
-func GetAlbum(album *types.Album) {
+func GetAlbum(album *types.Album, flacMode bool) {
 	usrHome, _ := os.UserHomeDir()
-	downloadFolder := fmt.Sprintf("%s/Downloads", usrHome) // TODO: Offer a configuration option
+	downloadFolder := fmt.Sprintf("%s/Music", usrHome) // TODO: Offer a configuration option
 	directoryPath := fmt.Sprintf("%s/%s", downloadFolder, normaliseFileName(album.Title))
 	// TODO: This should be checked before download since it takes ages to get here
 	_, err := os.Stat(directoryPath)
@@ -58,7 +58,7 @@ func GetAlbum(album *types.Album) {
 			// TODO: Padding for 10+ discs
 			trackFmt = fmt.Sprintf("%0*dx%s", discPadLen, track.DiscNumber, trackFmt)
 		}
-		err := SaveAudioFile(track, trackFmt, directoryPath)
+		err := SaveAudioFile(track, trackFmt, directoryPath, flacMode)
 		if err != nil {
 			pterm.Error.Printfln(trackFmt)
 		} else {
@@ -69,10 +69,19 @@ func GetAlbum(album *types.Album) {
 
 }
 
-func SaveAudioFile(track types.Track, fileName string, saveLocation string) error {
-	trackFile := fmt.Sprintf("%s/%s.mp3", saveLocation, normaliseFileName(fileName))
-	pterm.Debug.Printfln("Downloading %s", track.SourceMP3)
-	res, err := util.RequestFile(track.SourceMP3)
+func SaveAudioFile(track types.Track, fileName string, saveLocation string, flacMode bool) error {
+	var sourceText, fileExt string
+	if flacMode && track.SourceFlac != "" {
+		sourceText = track.SourceFlac
+		fileExt = "flac"
+	} else {
+		sourceText = track.SourceMP3
+		fileExt = "mp3"
+	}
+
+	trackFile := fmt.Sprintf("%s/%s.%s", saveLocation, normaliseFileName(fileName), fileExt)
+	pterm.Debug.Printfln("Downloading %s", sourceText)
+	res, err := util.RequestFile(sourceText)
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -80,7 +89,7 @@ func SaveAudioFile(track types.Track, fileName string, saveLocation string) erro
 		}
 	}(res.Body)
 	if err != nil {
-		pterm.Debug.Printfln("There was an error downloading %s", track.SourceMP3)
+		pterm.Debug.Printfln("There was an error downloading %s", sourceText)
 		return err
 	}
 	writer, err := os.Create(trackFile)

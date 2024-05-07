@@ -17,7 +17,8 @@ func BeforeSearch() error {
 	return nil
 }
 
-func SearchAction() error {
+func SearchAction(flacMode bool) error {
+	//TODO: Add a possibilty to select the mode from the tui
 	index, err := indexer.LoadLocalIndex()
 	if err != nil {
 		panic(err)
@@ -26,20 +27,20 @@ func SearchAction() error {
 	if err != nil {
 		panic(err)
 	}
-	err = DownloadAction(selectedSlugs)
+	err = DownloadAction(selectedSlugs, flacMode)
 	if err != nil {
 		pterm.Error.Println("Failed to download album")
 	}
 	return nil
 }
 
-func DownloadAction(slugs []string) error {
+func DownloadAction(slugs []string, flacMode bool) error {
 	for _, slug := range slugs {
 		album, err := scrape.RetrieveAlbum(slug)
 		if err != nil {
 			return err
 		}
-		download.GetAlbum(&album)
+		download.GetAlbum(&album, flacMode)
 	}
 	return nil
 }
