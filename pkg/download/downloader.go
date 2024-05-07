@@ -8,12 +8,13 @@ import (
 	"os"
 	"unicode/utf8"
 
+	"github.com/marcus-crane/khinsider/v3/cmd/khinsider/env"
 	"github.com/marcus-crane/khinsider/v3/pkg/types"
 	"github.com/marcus-crane/khinsider/v3/pkg/util"
 	"github.com/pterm/pterm"
 )
 
-func GetAlbum(album *types.Album, flacMode bool) {
+func GetAlbum(album *types.Album) {
 	usrHome, _ := os.UserHomeDir()
 	downloadFolder := fmt.Sprintf("%s/Music", usrHome) // TODO: Offer a configuration option
 	directoryPath := fmt.Sprintf("%s/%s", downloadFolder, normaliseFileName(album.Title))
@@ -58,7 +59,7 @@ func GetAlbum(album *types.Album, flacMode bool) {
 			// TODO: Padding for 10+ discs
 			trackFmt = fmt.Sprintf("%0*dx%s", discPadLen, track.DiscNumber, trackFmt)
 		}
-		err := SaveAudioFile(track, trackFmt, directoryPath, flacMode)
+		err := SaveAudioFile(track, trackFmt, directoryPath)
 		if err != nil {
 			pterm.Error.Printfln(trackFmt)
 		} else {
@@ -69,9 +70,9 @@ func GetAlbum(album *types.Album, flacMode bool) {
 
 }
 
-func SaveAudioFile(track types.Track, fileName string, saveLocation string, flacMode bool) error {
+func SaveAudioFile(track types.Track, fileName string, saveLocation string) error {
 	var sourceText, fileExt string
-	if flacMode && track.SourceFlac != "" {
+	if env.GetAppFlags().FlacMode && track.SourceFlac != "" {
 		sourceText = track.SourceFlac
 		fileExt = "flac"
 	} else {

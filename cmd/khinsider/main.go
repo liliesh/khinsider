@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/marcus-crane/khinsider/v3/cmd/khinsider/env"
 	"github.com/pterm/pterm"
 	"github.com/urfave/cli/v2"
 )
@@ -57,6 +58,12 @@ func Execute(buildInfo BuildInfo) {
 				Value:   false,
 				Usage:   "Downloads provided/selected album as flac. (if available)",
 			},
+			&cli.BoolFlag{
+				Name:    "local-index",
+				Aliases: []string{"l"},
+				Value:   false,
+				Usage:   "Uses a local index instead of the remote",
+			},
 		},
 		Before: func(c *cli.Context) error {
 			if c.Bool("debug") {
@@ -79,6 +86,7 @@ func Execute(buildInfo BuildInfo) {
 					return BeforeSearch()
 				},
 				Action: func(c *cli.Context) error {
+					env.SetAppFlags(c)
 					return SearchAction(c.Bool("flac-mode"))
 				},
 			},
@@ -87,7 +95,8 @@ func Execute(buildInfo BuildInfo) {
 				Aliases: []string{"a"},
 				Usage:   "download an album given a slug",
 				Action: func(c *cli.Context) error {
-					return DownloadAction([]string{c.Args().First()}, c.Bool("flac-mode"))
+					env.SetAppFlags(c)
+					return DownloadAction([]string{c.Args().First()})
 				},
 			},
 			{
@@ -105,6 +114,7 @@ func Execute(buildInfo BuildInfo) {
 		},
 	}
 
+	env.GetAppFlags()
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
